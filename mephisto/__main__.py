@@ -42,4 +42,7 @@ if __name__ == "__main__":
     _update_pyproject()
     _ensure_env()
 
-    logger.success("Mephisto Launched")
+    from mephisto.library.core import launch
+
+    logger.info("Launching Mephisto...")
+    launch()
