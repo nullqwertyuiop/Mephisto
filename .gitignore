@@ -156,3 +156,9 @@ cython_debug/
 
 # PDM
 .pdm-python
+.pdm-build
+
+# Mephisto
+mephisto/pdm.lock
+mephisto/pyproject.toml
+mephisto/log/

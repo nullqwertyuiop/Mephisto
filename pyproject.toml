@@ -5,10 +5,28 @@ description = ""
 authors = [
     {name = "nullqwertyuiop", email = "null@member.fsf.org"},
 ]
-dependencies = []
-requires-python = ">=3.10"
+dependencies = [
+    "toml>=0.10.2",
+    "pydantic>=2.5.2",
+    "uvicorn>=0.24.0.post1",
+    "fastapi>=0.104.1",
+    "psutil>=5.9.6",
+    "graiax-fastapi>=0.4.1",
+    "graia-broadcast>=0.23.4",
+]
+requires-python = ">=3.11"
 readme = "README.md"
 license = {text = "AGPL-3.0 License"}
+
+[tool.pdm.build]
+includes = []
+
+[build-system]
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
+
+[tool.isort]
+profile = "black"
 
 [project.optional-dependencies]
 dev = [
