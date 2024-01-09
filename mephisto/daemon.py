@@ -170,7 +170,7 @@ class ProcessManager:
         if self.proc is not None and self.proc.is_running():
             raise MephistoAlreadyRunning()
         popen = self.run(
-            ["pdm", "run", "python", "-m", "mephisto"],
+            ["pdm", "run", "python", "__main__.py"],
             cwd="mephisto",
             env=os.environ
             | {"MEPHISTO_DAEMON": "1", "MEPHISTO_DAEMON_TOKEN": token_ctx.get()},

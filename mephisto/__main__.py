@@ -7,20 +7,27 @@ from loguru import logger
 from mephisto.shared import MEPHISTO_ROOT, PROJECT_ROOT, setup_logger
 
 
+def _init():
+    parent_pyproject = Path(PROJECT_ROOT / "pyproject.toml")
+    child_pyproject = Path(MEPHISTO_ROOT / "pyproject.toml")
+    parent_pdm_lock = Path(PROJECT_ROOT / "pdm.lock")
+    child_pdm_lock = Path(MEPHISTO_ROOT / "pdm.lock")
+    child_pyproject.write_text(parent_pyproject.read_text())
+    child_pdm_lock.write_text(parent_pdm_lock.read_text())
+
+
 def _update_pyproject():
-    parent = toml.loads(Path(PROJECT_ROOT / "pyproject.toml").read_text())
-    child = toml.loads((MEPHISTO_ROOT / "pyproject.toml").read_text())
-    parent["project"]["optional-dependencies"]["mephisto"] = child["project"][
+    parent_data = toml.loads(Path(PROJECT_ROOT / "pyproject.toml").read_text())
+    child_data = toml.loads((MEPHISTO_ROOT / "pyproject.toml").read_text())
+    parent_data["project"]["optional-dependencies"]["mephisto"] = child_data["project"][
         "optional-dependencies"
-    ]["mephisto"]
-    del parent["project"]["readme"]
-    del parent["project"]["license"]
-    (MEPHISTO_ROOT / "pyproject.toml").write_text(toml.dumps(parent))
+    ].get("mephisto", [])
+    (MEPHISTO_ROOT / "pyproject.toml").write_text(toml.dumps(parent_data))
 
 
 def _ensure_env():
-    pdm_lock = Path(MEPHISTO_ROOT, "pdm.lock")
-    if not pdm_lock.exists():
+    if not (MEPHISTO_ROOT / "pdm.lock").exists():
+        logger.debug("PDM 锁文件不存在，正在安装依赖")
         os.system("pdm install")
 
 
@@ -32,13 +39,17 @@ def _ensure_daemon():
     if env.get("MEPHISTO_DAEMON_TOKEN") is None:
         logger.critical("Mephisto 守护进程启动，但未提供合法的 TOKEN")
         return
-    os.environ = os.environ | {"PDM_IGNORE_SAVED_PYTHON": "1", "PDM_NO_SELF": "1"}
+    os.environ |= {"PDM_NO_SELF": "1"}
     logger.debug("Mephisto 由守护进程启动，token 为 {token}", token=env["MEPHISTO_DAEMON_TOKEN"])
 
 
 if __name__ == "__main__":
     setup_logger(MEPHISTO_ROOT / "log", 7)
     _ensure_daemon()
+
+    if (MEPHISTO_ROOT / "pyproject.toml").is_file():
+        _init()
+
     _update_pyproject()
     _ensure_env()
 
