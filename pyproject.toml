@@ -16,6 +16,7 @@ dependencies = [
     "avilla-core>=1.0.0a17",
     "graia-saya>=0.0.19",
     "aiohttp>=3.9.1",
+    "avilla-twilight>=0.3.1",
 ]
 requires-python = ">=3.11"
 readme = "README.md"

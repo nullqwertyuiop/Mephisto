@@ -5,7 +5,7 @@
 groups = ["default", "dev"]
 strategy = ["cross_platform"]
 lock_version = "4.4.1"
-content_hash = "sha256:8b4342cc80a5d8ba73ab68d4e2734fa4dd5a0508e9cabf19be2463b5798da7cc"
+content_hash = "sha256:951f96f138f9ad9d0b4a0fae76ab454ca4cb9db7091370bdb20196ac5ca808ca"
 
 [[package]]
 name = "aiohttp"
@@ -115,6 +115,20 @@ dependencies = [
 files = [
     {file = "avilla_core-1.0.0a21-py3-none-any.whl", hash = "sha256:bda5167905376dca9ddd4bfaccafa2fdf1e2419a6c738b0ab7827251abbdf26f"},
     {file = "avilla_core-1.0.0a21.tar.gz", hash = "sha256:281acb73e0e5d223ed2f7ff746a467902a51bf2e4f70d763a986b34a68d95a39"},
+]
+
+[[package]]
+name = "avilla-twilight"
+version = "0.3.1"
+requires_python = ">=3.9"
+summary = "Twilight Message Parser for Avilla"
+dependencies = [
+    "avilla-core>=1.0.0a8",
+    "pydantic>=1.10.0",
+]
+files = [
+    {file = "avilla_twilight-0.3.1-py3-none-any.whl", hash = "sha256:bda7d03a0c775fe7d87bee4c71b33814c2c9f31497e21332b9ca68c9a7a1596d"},
+    {file = "avilla_twilight-0.3.1.tar.gz", hash = "sha256:dbe294689f0f9d7db935291e63e00a08c48a47ab67de8f7166f6fb0cab8c5a69"},
 ]
 
 [[package]]
