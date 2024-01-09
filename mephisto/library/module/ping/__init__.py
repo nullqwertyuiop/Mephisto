@@ -1,10 +1,10 @@
 from avilla.core import Context
 from avilla.standard.core.message import MessageReceived
-from graia.amnesia.message import MessageChain
-from graia.saya.builtins.broadcast.shortcut import listen
+from avilla.twilight.twilight import FullMatch, Twilight
+from graia.saya.builtins.broadcast.shortcut import dispatch, listen
 
 
 @listen(MessageReceived)
-async def ping(ctx: Context, content: MessageChain):
-    if str(content) == "/ping":
-        return await ctx.scene.send_message("pong")
+@dispatch(Twilight(FullMatch("/ping")))
+async def ping(ctx: Context):
+    return await ctx.scene.send_message("pong")
