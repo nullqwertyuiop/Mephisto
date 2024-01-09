@@ -53,7 +53,7 @@ if __name__ == "__main__":
     _update_pyproject()
     _ensure_env()
 
-    from mephisto.library.core import launch
+    from mephisto.library import launch
 
     logger.info("Launching Mephisto...")
     launch()
