@@ -7,7 +7,7 @@ authors = [
 ]
 dependencies = [
     "toml>=0.10.2",
-    "pydantic>=2.5.2",
+    "pydantic>=2.5.3",
     "uvicorn>=0.24.0.post1",
     "fastapi>=0.104.1",
     "psutil>=5.9.6",
@@ -18,6 +18,7 @@ dependencies = [
     "aiohttp>=3.9.1",
     "avilla-twilight>=0.3.1",
     "avilla-console>=0.2.0",
+    "kayaku>=0.5.4",
 ]
 requires-python = ">=3.11"
 readme = "README.md"
