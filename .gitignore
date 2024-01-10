@@ -162,3 +162,6 @@ cython_debug/
 mephisto/pdm.lock
 mephisto/pyproject.toml
 mephisto/log/
+mephisto/config/
+mephisto/data/
+mephisto/module/

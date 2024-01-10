@@ -48,7 +48,7 @@ directory = "changelog.d"
 filename = "CHANGELOG.md"
 start_string = "<!-- towncrier release notes start -->\n"
 underlines = ["", "", ""]
-template = "changelog.d/changelog_template.jinja"
+template = "changelog.d/changelog_template.ninja"
 title_format = "## [{version}](https://github.com/nullqwertyuiop/Mephisto/tree/{version}) - {project_date}"
 issue_format = "[#{issue}](https://github.com/nullqwertyuiop/Mephisto/issues/{issue})"
 
