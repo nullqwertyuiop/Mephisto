@@ -43,7 +43,7 @@ def _ensure_daemon():
     logger.debug("Mephisto 由守护进程启动，token 为 {token}", token=env["MEPHISTO_DAEMON_TOKEN"])
 
 
-if __name__ == "__main__":
+def run():
     setup_logger(MEPHISTO_ROOT / "log", 7)
     _ensure_daemon()
 
@@ -57,3 +57,7 @@ if __name__ == "__main__":
 
     logger.info("Launching Mephisto...")
     launch()
+
+
+if __name__ == "__main__":
+    run()
