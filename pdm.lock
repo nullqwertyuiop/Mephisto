@@ -5,7 +5,7 @@
 groups = ["default", "dev"]
 strategy = ["cross_platform"]
 lock_version = "4.4.1"
-content_hash = "sha256:d7178cdac85032b0360480cc2a46654530a16f4f42d68d0dd9c1c11418ba13a9"
+content_hash = "sha256:c10275dd660f69a439076e972761c414fc1af10eca49e77abbf831c21eacbb6a"
 
 [[package]]
 name = "aiohttp"
@@ -102,15 +102,16 @@ files = [
 
 [[package]]
 name = "avilla-console"
-version = "0.2.0"
+version = "1.0.0a19"
 requires_python = ">=3.9"
 summary = "Avilla Console Protocol"
 dependencies = [
+    "avilla-core>=1.0.0a19",
     "nonechat<1.0.0,>=0.2.0",
 ]
 files = [
-    {file = "avilla_console-0.2.0-py3-none-any.whl", hash = "sha256:fa29ab2f044041b80ea85c0b6449b970538d33eebfd81b646f3347d919290991"},
-    {file = "avilla_console-0.2.0.tar.gz", hash = "sha256:0f2fe29d6bc9bec93051051ecb81b25f52058f9d925632cc9eb9694db8b2a260"},
+    {file = "avilla_console-1.0.0a19-py3-none-any.whl", hash = "sha256:9eec3e865ff1cbf178c3ea0b095832263f5f202c745ec55243e577008854799c"},
+    {file = "avilla_console-1.0.0a19.tar.gz", hash = "sha256:f84ad1aa91dfd1512cdd3ac25203f0e79495cf8f6978c111efa6b6c0a2f8a974"},
 ]
 
 [[package]]

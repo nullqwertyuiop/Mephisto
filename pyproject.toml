@@ -17,7 +17,7 @@ dependencies = [
     "graia-saya>=0.0.19",
     "aiohttp>=3.9.1",
     "avilla-twilight>=0.3.1",
-    "avilla-console>=0.2.0",
+    "avilla-console>=1.0.0a19",
     "kayaku>=0.5.4",
 ]
 requires-python = ">=3.11"
