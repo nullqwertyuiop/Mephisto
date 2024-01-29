@@ -16,11 +16,13 @@ class ConfigService(Service):
 
     async def launch(self, manager: Launart):
         async with self.stage("preparing"):
-            logger.success("[ConfigService] 数据库初始化完成")
+            # TODO: Implement database initialization
+            # logger.success("[ConfigService] Initialized database")
+
             kayaku.bootstrap()
             kayaku.save_all()
-            logger.success("[ConfigService] 已保存配置文件")
+            logger.success("[ConfigService] Initialized all configurations")
 
         async with self.stage("cleanup"):
             kayaku.save_all()
-            logger.success("[ConfigService] 已保存配置文件")
+            logger.success("[ConfigService] Saved all configurations")

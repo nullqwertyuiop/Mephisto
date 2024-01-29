@@ -1,0 +1,11 @@
+{
+    "identifier": "library.module.ping",
+    "name": "Ping",
+    "version": "0.1.0",
+    "description": "Check if the server is up and running.",
+    "author": [
+        "nullqwertyuiop"
+    ],
+    "dependencies": [],
+    "standards": []
+}

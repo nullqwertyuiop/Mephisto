@@ -38,8 +38,8 @@ class TelegramBotProtocolConfig(ProtocolConfig):
         return TelegramProtocol().configure(
             TelegramBotConfig(
                 token=self.token,
-                base_url=URL(self.base_url),
-                base_file_url=URL(self.base_file_url),
+                base_url=URL(str(self.base_url)),
+                base_file_url=URL(str(self.base_file_url)),
                 timeout=self.timeout,
                 reformat=self.reformat,
             )

@@ -1,11 +1,10 @@
-import pkgutil
 from pathlib import Path
 
 from avilla.core import Avilla
-from creart import it
-from graia.saya import Saya
 from launart import Launart, Service
 from loguru import logger
+
+from mephisto.shared import MEPHISTO_ROOT
 
 
 class MephistoService(Service):
@@ -19,9 +18,10 @@ class MephistoService(Service):
     @property
     def required(self):
         return {
-            "mephisto.service/session",
             "mephisto.service/config",
+            "mephisto.service/module",
             "mephisto.service/protocol",
+            "mephisto.service/session",
         }
 
     @property
@@ -29,19 +29,21 @@ class MephistoService(Service):
         return {"preparing", "cleanup"}
 
     @staticmethod
-    def require_modules(*paths: Path):
-        saya = it(Saya)
-        with saya.module_context():
-            for path in paths:
-                for module in pkgutil.iter_modules([str(path)]):
-                    saya.require((path / module.name).as_posix().replace("/", "."))
+    def ensure_path(path: str):
+        if not (p := Path(MEPHISTO_ROOT, path)).is_dir():
+            p.mkdir(parents=True)
 
     async def launch(self, manager: Launart):
         self._avilla = Avilla()
-        self.require_modules(Path("library") / "module")
+
+        self.ensure_path("config")
+        self.ensure_path("data")
+        self.ensure_path("module")
+        self.ensure_path("standard")
+        logger.success("[MephistoService] Ensured all paths")
 
         async with self.stage("preparing"):
-            logger.success("[MephistoService] Current stage: preparing")
+            logger.info("[MephistoService] Current stage: preparing")
 
         async with self.stage("cleanup"):
-            logger.success("[MephistoService] Current stage: cleanup")
+            logger.info("[MephistoService] Current stage: cleanup")

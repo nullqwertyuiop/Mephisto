@@ -28,7 +28,7 @@ class ProtocolService(Service):
     def stages(self):
         return {"preparing"}
 
-    def _check_console(self):
+    def _load_console(self):
         if os.environ.get("MEPHISTO_NO_CONSOLE") != "1":
             self.apply_protocols(ConsoleProtocol())
         else:
@@ -57,5 +57,5 @@ class ProtocolService(Service):
 
     async def launch(self, manager: Launart):
         async with self.stage("preparing"):
-            self._check_console()
+            self._load_console()
             self._load_protocols()
