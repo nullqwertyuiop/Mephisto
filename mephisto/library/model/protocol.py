@@ -1,6 +1,11 @@
 from typing import Literal
 
 from avilla.core import BaseProtocol
+from avilla.onebot.v11 import (
+    OneBot11ForwardConfig,
+    OneBot11Protocol,
+    OneBot11ReverseConfig,
+)
 from avilla.telegram.protocol import TelegramBotConfig, TelegramProtocol
 from pydantic import AnyHttpUrl, BaseModel, ValidationError
 from yarl import URL
@@ -34,7 +39,7 @@ class TelegramBotProtocolConfig(ProtocolConfig):
     timeout: int = 15
     reformat: bool = False
 
-    def to_protocol(self) -> BaseProtocol:
+    def to_protocol(self) -> TelegramProtocol:
         return TelegramProtocol().configure(
             TelegramBotConfig(
                 token=self.token,
@@ -50,8 +55,38 @@ class TelegramBotProtocolConfig(ProtocolConfig):
         return self.token.split(":")[0]
 
 
-class OneBotV11ProtocolConfig(ProtocolConfig):
-    protocol: Literal["onebot_v11"] = "onebot_v11"
+class OneBotV11ProtocolFwdConfig(ProtocolConfig):
+    protocol: Literal["onebot_v11_forward"] = "onebot_v11_forward"
+    endpoint: AnyHttpUrl
+    access_token: str | None = None
+
+    def to_protocol(self) -> OneBot11Protocol:
+        return OneBot11Protocol().configure(
+            OneBot11ForwardConfig(
+                endpoint=URL(str(self.endpoint)), access_token=self.access_token
+            )
+        )
+
+    @property
+    def id(self):
+        return f"{self.endpoint.host}_{self.endpoint.port}"
+
+
+class OneBotV11ProtocolRevConfig(ProtocolConfig):
+    protocol: Literal["onebot_v11_reverse"] = "onebot_v11_reverse"
+    endpoint: str
+    access_token: str | None = None
+
+    def to_protocol(self) -> OneBot11Protocol:
+        return OneBot11Protocol().configure(
+            OneBot11ReverseConfig(
+                endpoint=self.endpoint, access_token=self.access_token
+            )
+        )
+
+    @property
+    def id(self):
+        return self.endpoint.replace("/", "_")
 
 
 class ElizabethProtocolConfig(ProtocolConfig):
