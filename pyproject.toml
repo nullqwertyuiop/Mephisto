@@ -20,6 +20,7 @@ dependencies = [
     "avilla-console>=1.0.0a19",
     "kayaku>=0.5.4",
     "avilla-onebot-v11>=1.0.0a19",
+    "graiax-text2img-playwright>=0.5.0",
 ]
 requires-python = ">=3.11"
 readme = "README.md"

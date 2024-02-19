@@ -1,5 +1,6 @@
 import kayaku
 from creart import it
+from graiax.playwright import PlaywrightService
 from launart import Launart
 
 
@@ -25,4 +26,5 @@ def launch():
     mgr.add_component(SessionService())
     mgr.add_component(StandardService())
     mgr.add_component(MephistoService())
+    mgr.add_component(PlaywrightService())
     mgr.launch_blocking()
