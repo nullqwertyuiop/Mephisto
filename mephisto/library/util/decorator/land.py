@@ -11,6 +11,7 @@ T_Callable = TypeVar("T_Callable", bound=Callable)
 
 
 class Land:
+    # TODO: deprecate LandType
     @classmethod
     def include(cls, *lands: LandType) -> Depend:
         async def check(ctx: Context) -> NoReturn:

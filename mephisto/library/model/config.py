@@ -13,6 +13,7 @@ class MephistoNetworkConfig:
 class MephistoAdvancedConfig:
     debug: bool = False
     log_rotate: int = 7
+    message_cache_size: int = 5000
 
 
 @config("library.main")

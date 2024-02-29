@@ -1,8 +1,8 @@
 {
-    "identifier": "library.module.ping",
-    "name": "Ping",
+    "identifier": "library.module.console",
+    "name": "控制台",
     "version": "0.1.0",
-    "description": "检查服务是否在线",
+    "description": "控制台交互模块",
     "author": [
         "nullqwertyuiop"
     ],

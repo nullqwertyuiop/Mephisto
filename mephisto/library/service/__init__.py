@@ -1,3 +1,4 @@
+from .cache import MessageCacheService
 from .config import ConfigService
 from .essential import MephistoService
 from .module import ModuleService

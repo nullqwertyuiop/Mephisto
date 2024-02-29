@@ -11,6 +11,7 @@ def launch():
     from mephisto.library.service import (
         ConfigService,
         MephistoService,
+        MessageCacheService,
         ModuleService,
         ProtocolService,
         SessionService,
@@ -20,6 +21,7 @@ def launch():
     kayaku.create(MephistoConfig)
 
     mgr = it(Launart)
+    mgr.add_component(MessageCacheService())
     mgr.add_component(ConfigService())
     mgr.add_component(ModuleService())
     mgr.add_component(ProtocolService())

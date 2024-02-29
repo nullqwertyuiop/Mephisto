@@ -158,6 +158,9 @@ cython_debug/
 .pdm-python
 .pdm-build
 
+# Playground
+playground/
+
 # Mephisto
 mephisto/pdm.lock
 mephisto/pyproject.toml
