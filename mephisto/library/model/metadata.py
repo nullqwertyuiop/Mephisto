@@ -15,10 +15,12 @@ def _identifier_validator(scope: str, v: str):
         raise ValueError(f'{scope.capitalize()} identifier must start with "{scope}."')
     if not v.lstrip("library.").lstrip(f"{scope}."):
         raise ValueError(f"{scope.capitalize()} identifier cannot be empty")
+    if v[0].isdigit():
+        raise ValueError(f"{scope.capitalize()} identifier cannot start with a digit")
     if [
         char
         for char in v.lstrip("library.").lstrip(f"{scope}.")
-        if (char == "-" or not char.isalnum())
+        if not char.isalnum() and char not in ["_", "."]
     ]:
         raise ValueError(f"{scope.capitalize()} identifier invalid")
     return v

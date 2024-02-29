@@ -14,10 +14,28 @@ from mephisto.library.model.metadata import ModuleMetadata
 from mephisto.shared import MEPHISTO_ROOT
 
 
+class ModuleStore:
+    modules: set[ModuleMetadata]
+    enabled: set[ModuleMetadata]
+
+    def __init__(self, modules: set[ModuleMetadata], enabled: set[ModuleMetadata]):
+        self.modules = modules
+        self.enabled = enabled
+
+    @property
+    def disabled(self):
+        return self.modules - self.enabled
+
+
 class ModuleService(Service):
     id = "mephisto.service/module"
     modules: set[ModuleMetadata]
     enabled: set[ModuleMetadata]
+
+    def __init__(self):
+        self.modules = set()
+        self.enabled = set()
+        super().__init__()
 
     @property
     def required(self):
@@ -132,8 +150,11 @@ class ModuleService(Service):
                 saya.require(module.identifier)
         self.modules |= set(resolved)
 
+    @property
+    def store(self):
+        return ModuleStore(self.modules, self.enabled)
+
     async def launch(self, manager: Launart):
-        self.modules = set()
         self.require_modules(Path("library") / "module", Path("module"))
 
         async with self.stage("preparing"):
