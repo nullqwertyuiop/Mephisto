@@ -5,6 +5,7 @@ from time import time
 from typing import Any
 
 from avilla.core import Message, Selector
+from avilla.standard.core.message import MessageReceived
 from graia.amnesia.builtins.memcache import Memcache
 from kayaku import create
 from launart import Launart, Service
@@ -43,7 +44,7 @@ class MessageCacheService(Service):
 
     @property
     def required(self):
-        return {"mephisto.service/config"}
+        return {"mephisto.service/data"}
 
     @property
     def stages(self):
@@ -63,7 +64,14 @@ class MessageCacheService(Service):
         return await self.cache.get(key)
 
     async def launch(self, manager: Launart):
+        from mephisto.library.service import MephistoService
+
         logger.info(f"[MessageCacheService] Initialized with {self.size} cache size")
+        broadcast = manager.get_component(MephistoService).broadcast
+
+        @broadcast.receiver(MessageReceived, priority=-1)
+        async def cache_message(event: MessageReceived):
+            await manager.get_component(MessageCacheService).add(event.message)
 
         async with self.stage("blocking"):
             while not manager.status.exiting:

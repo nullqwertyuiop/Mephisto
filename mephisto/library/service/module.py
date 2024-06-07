@@ -39,7 +39,11 @@ class ModuleService(Service):
 
     @property
     def required(self):
-        return {"mephisto.service/standard"}
+        return {
+            "mephisto.service/data",
+            "mephisto.service/standard",
+            "mephisto.service/uvicorn",
+        }
 
     @property
     def stages(self):
@@ -79,7 +83,8 @@ class ModuleService(Service):
             return module
         new_path = module.parent / module.stem
         new_path.mkdir(exist_ok=True)
-        module.rename(new_path / "__init__.py")
+        (new_path / "__init__.py").touch(exist_ok=True)
+        module.rename(new_path / "main.py")
         logger.info(f"[ModuleService] Standardized {module} to {new_path}")
         return new_path
 
@@ -87,6 +92,10 @@ class ModuleService(Service):
     def check_and_cleanup(path: Path):
         # TODO: check if the module is a corpse
         return True
+
+    @staticmethod
+    def noload_flag(path: Path):
+        return (path / ".noload").exists()
 
     def prepare_metadata(self, *paths: Path) -> list[ModuleMetadata]:
         prepared: list[ModuleMetadata] = []
@@ -102,10 +111,20 @@ class ModuleService(Service):
                 module_path = self.standardize(path / module.name)
                 try:
                     metadata = self.parse_metadata(module_path)
+                    if self.noload_flag(module_path):
+                        logger.warning(
+                            f"[ModuleService] Skipped module {module.name} due to noload flag"
+                        )
+                        continue
                     prepared.append(metadata)
                 except (ValidationError, FileNotFoundError, JSONDecodeError):
                     metadata = self.generate_metadata(module_path)
                     self.write_metadata(metadata)
+                    if self.noload_flag(module_path):
+                        logger.warning(
+                            f"[ModuleService] Skipped module {module.name} due to noload flag"
+                        )
+                        continue
                     prepared.append(metadata)
         return prepared
 
@@ -147,7 +166,7 @@ class ModuleService(Service):
         resolved = self.resolve(*prepared)
         with saya.module_context():
             for module in resolved:
-                saya.require(module.identifier)
+                saya.require(module.entrypoint)
         self.modules |= set(resolved)
 
     @property

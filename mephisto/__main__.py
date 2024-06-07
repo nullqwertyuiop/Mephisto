@@ -4,7 +4,7 @@ from pathlib import Path
 import toml
 from loguru import logger
 
-from mephisto.shared import MEPHISTO_ROOT, PROJECT_ROOT, setup_logger
+from mephisto.shared import MEPHISTO_ROOT, PROJECT_ROOT, LOG_ROOT, setup_logger
 
 
 def _init():
@@ -33,18 +33,20 @@ def _ensure_env():
 
 def _ensure_daemon():
     env = os.environ
-    if env.get("MEPHISTO_DAEMON") != "1":
+    if env["MEPHISTO_NO_DAEMON"] == "1":
         logger.critical("Mephisto 非守护进程启动，可能会导致 Mephisto 无法正常运行")
         return
-    if env.get("MEPHISTO_DAEMON_TOKEN") is None:
+    if env["MEPHISTO_DAEMON_TOKEN"] == "":
         logger.critical("Mephisto 守护进程启动，但未提供合法的 TOKEN")
         return
     os.environ |= {"PDM_NO_SELF": "1"}
-    logger.debug("Mephisto 由守护进程启动，token 为 {token}", token=env["MEPHISTO_DAEMON_TOKEN"])
+    logger.debug(
+        "Mephisto 由守护进程启动，token 为 {token}", token=env["MEPHISTO_DAEMON_TOKEN"]
+    )
 
 
 def run():
-    setup_logger(MEPHISTO_ROOT / "log", 7)
+    setup_logger(LOG_ROOT, 7)
     _ensure_daemon()
 
     if (MEPHISTO_ROOT / "pyproject.toml").is_file():

@@ -19,9 +19,9 @@ from loguru import logger
 from psutil import Process
 from starlette.middleware.cors import CORSMiddleware
 
-from mephisto.shared import MEPHISTO_ROOT, GenericSuccessResponse, setup_logger
+from mephisto.shared import LOG_ROOT, GenericSuccessResponse, setup_logger
 
-setup_logger(MEPHISTO_ROOT / "log" / "daemon", 7)
+setup_logger(LOG_ROOT / "daemon", 7)
 
 fastapi = FastAPI(openapi_url=None, docs_url=None, redoc_url=None)
 fastapi.add_middleware(
@@ -172,8 +172,7 @@ class ProcessManager:
         popen = self.run(
             ["pdm", "run", "python", "__main__.py"],
             cwd="mephisto",
-            env=os.environ
-            | {"MEPHISTO_DAEMON": "1", "MEPHISTO_DAEMON_TOKEN": token_ctx.get()},
+            env=os.environ | {"MEPHISTO_DAEMON_TOKEN": token_ctx.get()},
         )
         self.proc = Process(popen.pid)
 
@@ -204,7 +203,9 @@ class ProcessManager:
         ]
         if len(attempts_one_minute) >= 3:
             self.keep_alive = False
-            logger.critical("[MephistoDaemon] Mephisto 短时间内重启次数过多，已停止自动重启")
+            logger.critical(
+                "[MephistoDaemon] Mephisto 短时间内重启次数过多，已停止自动重启"
+            )
             logger.critical("[MephistoDaemon] 请检查 Mephisto 是否出现问题")
         self.attempts = attempts_one_minute
         self.attempts.append(time.time())
@@ -240,10 +241,9 @@ class DaemonService(Service):
         logger.success("[MephistoDaemon] 已退出 Daemon")
 
 
-it(Launart).add_component(DaemonService())
-it(Launart).add_component(UvicornASGIService("127.0.0.1", get_unoccupied_port()))
-it(Launart).add_component(FastAPIService(fastapi))
-
-
-def launch_daemon():
-    it(Launart).launch_blocking()
+def launch_daemon(port: int):
+    mgr = it(Launart)
+    mgr.add_component(DaemonService())
+    mgr.add_component(UvicornASGIService("127.0.0.1", port or get_unoccupied_port()))
+    mgr.add_component(FastAPIService(fastapi))
+    mgr.launch_blocking()

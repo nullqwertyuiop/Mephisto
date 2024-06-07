@@ -10,11 +10,9 @@ from loguru import logger
 
 from mephisto.library.model.protocol import ProtocolConfig
 from mephisto.library.service import MephistoService
-from mephisto.shared import MEPHISTO_ROOT
+from mephisto.shared import CONFIG_ROOT
 
-_PROTOCOL_CREDENTIAL_PATH: Final[Path] = Path(
-    MEPHISTO_ROOT, "config", "library", "credentials"
-)
+_PROTOCOL_CREDENTIAL_PATH: Final[Path] = Path(CONFIG_ROOT, "library", "credentials")
 
 
 class ProtocolService(Service):
@@ -29,7 +27,7 @@ class ProtocolService(Service):
         return {"preparing"}
 
     def _load_console(self):
-        if os.environ.get("MEPHISTO_NO_CONSOLE") != "1":
+        if os.environ["MEPHISTO_NO_CONSOLE"] == "0":
             self.apply_protocols(ConsoleProtocol())
         else:
             logger.warning("[ProtocolService] Console protocol disabled")
@@ -41,7 +39,9 @@ class ProtocolService(Service):
         configs: list[ProtocolConfig] = []
         for file in _PROTOCOL_CREDENTIAL_PATH.rglob("*.json"):
             with file.open("r") as f:
-                configs.append(ProtocolConfig.resolve(json.load(f)))
+                protocol = ProtocolConfig.resolve(json.load(f))
+                if protocol.enabled:
+                    configs.append(protocol)
         if not configs:
             return
         logger.success(f"[ProtocolService] Loaded {len(configs)} registered protocols")

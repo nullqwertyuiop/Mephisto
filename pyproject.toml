@@ -20,13 +20,22 @@ dependencies = [
     "avilla-console>=1.0.0a19",
     "kayaku>=0.5.4",
     "avilla-onebot-v11>=1.0.0a19",
-    "graiax-text2img-playwright>=0.5.0",
     "richuru>=0.1.1",
-    "lxml>=5.1.0",
+    "sqlalchemy>=2.0.29",
+    "aiosqlite>=0.20.0",
 ]
 requires-python = ">=3.11"
 readme = "README.md"
 license = {text = "AGPL-3.0 License"}
+
+[project.optional-dependencies]
+playwright = [
+    "graiax-text2img-playwright>=0.5.0",
+    "lxml>=5.1.0",
+]
+mysql = [
+    "aiomysql>=0.2.0",
+]
 
 [tool.pdm.build]
 includes = []
@@ -38,7 +47,7 @@ build-backend = "pdm.backend"
 [tool.isort]
 profile = "black"
 
-[project.optional-dependencies]
+[tool.pdm.dev-dependencies]
 dev = [
     "pre-commit>=3.5.0",
     "towncrier>=23.11.0",

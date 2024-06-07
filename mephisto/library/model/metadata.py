@@ -52,3 +52,7 @@ class ModuleMetadata(MephistoMetadata):
     identifier: Annotated[str, AfterValidator(_module_identifier_validator)]
     dependencies: list["ModuleMetadata"] = []
     standards: list[StandardMetadata] = []
+
+    @property
+    def entrypoint(self):
+        return f"{self.identifier}.main"

@@ -9,19 +9,24 @@ from mephisto.shared import MEPHISTO_ROOT
 
 class MephistoService(Service):
     id = "mephisto.service/essential"
-    _avilla: Avilla
+    avilla: Avilla
 
     @property
-    def avilla(self):
-        return self._avilla
+    def broadcast(self):
+        return self.avilla.broadcast
+
+    def __init__(self):
+        self.avilla = Avilla()
+        super().__init__()
 
     @property
     def required(self):
         return {
-            "mephisto.service/config",
+            "mephisto.service/data",
             "mephisto.service/module",
             "mephisto.service/protocol",
             "mephisto.service/session",
+            "mephisto.service/uvicorn",
         }
 
     @property
@@ -34,8 +39,6 @@ class MephistoService(Service):
             p.mkdir(parents=True)
 
     async def launch(self, manager: Launart):
-        self._avilla = Avilla()
-
         self.ensure_path("config")
         self.ensure_path("data")
         self.ensure_path("module")
