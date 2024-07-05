@@ -1,5 +1,4 @@
 from contextlib import suppress
-from typing import Set
 
 from aiohttp import ClientSession
 from launart import Launart, Service
@@ -11,11 +10,11 @@ class SessionService(Service):
     id = "mephisto.service/session"
 
     @property
-    def required(self) -> Set[str]:
+    def required(self) -> set[str]:
         return set()
 
     @property
-    def stages(self) -> Set[Phase]:
+    def stages(self) -> set[Phase]:
         return {"preparing", "cleanup"}
 
     _session: dict[str, ClientSession] = {}
@@ -24,7 +23,7 @@ class SessionService(Service):
         self,
         name: str = "universal",
         flush: bool = False,
-        base_url: str = None,
+        base_url: str | None = None,
         /,
         **kwargs,
     ) -> ClientSession:

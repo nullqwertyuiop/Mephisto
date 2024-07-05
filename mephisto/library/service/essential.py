@@ -2,6 +2,7 @@ from pathlib import Path
 
 from avilla.core import Avilla
 from launart import Launart, Service
+from launart.status import Phase
 from loguru import logger
 
 from mephisto.shared import MEPHISTO_ROOT
@@ -30,7 +31,7 @@ class MephistoService(Service):
         }
 
     @property
-    def stages(self):
+    def stages(self) -> set[Phase]:
         return {"preparing", "cleanup"}
 
     @staticmethod

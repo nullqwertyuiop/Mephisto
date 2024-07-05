@@ -1,5 +1,6 @@
 import kayaku
 from launart import Launart, Service
+from launart.status import Phase
 from loguru import logger
 
 from mephisto.library.util.orm.base import DatabaseEngine
@@ -21,7 +22,7 @@ class DataService(Service):
         return set()
 
     @property
-    def stages(self):
+    def stages(self) -> set[Phase]:
         return {"preparing", "cleanup"}
 
     async def launch(self, manager: Launart):

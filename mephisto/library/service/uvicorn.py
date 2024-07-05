@@ -1,4 +1,4 @@
-from typing import Set, cast
+from typing import cast
 
 from creart import it
 from fastapi import FastAPI
@@ -9,7 +9,6 @@ from graiax.fastapi import FastAPIService, FastAPIBehaviour
 from kayaku import create
 from launart import Launart, Service
 from launart.status import Phase
-from loguru import logger
 from starlette.middleware.cors import CORSMiddleware
 
 from mephisto.library.model.config import MephistoConfig
@@ -43,11 +42,11 @@ class UvicornService(Service):
         manager.add_component(FastAPIService(self.fastapi))
 
     @property
-    def required(self) -> Set[str]:
+    def required(self) -> set[str]:
         return {"mephisto.service/data"}
 
     @property
-    def stages(self) -> Set[Phase]:
+    def stages(self) -> set[Phase]:
         return set()
 
     async def launch(self, manager: Launart):

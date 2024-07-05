@@ -5,6 +5,7 @@ from typing import cast
 
 from graia.ryanvk import BaseCollector, Staff, merge, ref
 from launart import Launart, Service
+from launart.status import Phase
 from loguru import logger
 
 from mephisto.library.model.metadata import StandardMetadata
@@ -25,7 +26,7 @@ class StandardService(Service):
         return set()
 
     @property
-    def stages(self):
+    def stages(self) -> set[Phase]:
         return {"preparing"}
 
     @property

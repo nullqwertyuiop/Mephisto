@@ -6,6 +6,7 @@ from typing import Final
 from avilla.console.protocol import ConsoleProtocol
 from avilla.core import BaseProtocol
 from launart import Launart, Service
+from launart.status import Phase
 from loguru import logger
 
 from mephisto.library.model.protocol import ProtocolConfig
@@ -23,7 +24,7 @@ class ProtocolService(Service):
         return set()
 
     @property
-    def stages(self):
+    def stages(self) -> set[Phase]:
         return {"preparing"}
 
     def _load_console(self):
@@ -33,6 +34,7 @@ class ProtocolService(Service):
             logger.warning("[ProtocolService] Console protocol disabled")
 
     def apply_protocols(self, *protocols: BaseProtocol):
+        assert self.manager
         self.manager.get_component(MephistoService).avilla.apply_protocols(*protocols)
 
     def _load_protocols(self):

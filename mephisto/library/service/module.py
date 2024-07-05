@@ -6,6 +6,7 @@ from pathlib import Path
 from creart import it
 from graia.saya import Saya
 from launart import Launart, Service
+from launart.status import Phase
 from loguru import logger
 from pydantic import ValidationError
 
@@ -46,7 +47,7 @@ class ModuleService(Service):
         }
 
     @property
-    def stages(self):
+    def stages(self) -> set[Phase]:
         return {"preparing"}
 
     @staticmethod

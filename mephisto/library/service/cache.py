@@ -2,13 +2,13 @@ import asyncio
 from datetime import timedelta
 from heapq import heappop
 from time import time
-from typing import Any
 
 from avilla.core import Message, Selector
 from avilla.standard.core.message import MessageReceived
 from graia.amnesia.builtins.memcache import Memcache
 from kayaku import create
 from launart import Launart, Service
+from launart.status import Phase
 from loguru import logger
 
 from mephisto.library.model.config import MephistoConfig
@@ -20,18 +20,18 @@ class MessageCacheService(Service):
     interval: float
     size: int
     lifespan: timedelta
-    _cache: dict[str, tuple[float | None, Any]]
+    _cache: dict[str, tuple[float | None, Message]]
     expire: list[tuple[float, str]]
 
-    __KEY_TEMPLATE = "mephisto.service/cache::{key}"
+    __KEY_TEMPLATE = "mephisto.service/cache::message::{key}"
 
     def __init__(
         self,
         interval: float = 0.1,
-        size: int = None,
+        size: int | None = None,  # type: ignore
         lifespan: timedelta = timedelta(hours=1),
-        cache: dict[str, tuple[float | None, Any]] = None,
-        expire: list[tuple[float, str]] = None,
+        cache: dict[str, tuple[float | None, Message]] | None = None,
+        expire: list[tuple[float, str]] | None = None,
     ):
         self.interval = interval
         if size is None:
@@ -47,7 +47,7 @@ class MessageCacheService(Service):
         return {"mephisto.service/data"}
 
     @property
-    def stages(self):
+    def stages(self) -> set[Phase]:
         return {"blocking"}
 
     @property

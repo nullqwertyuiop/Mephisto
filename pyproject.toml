@@ -57,6 +57,7 @@ dev = [
 ]
 
 [tool.towncrier]
+package = "mephisto"
 directory = "changelog.d"
 filename = "CHANGELOG.md"
 start_string = "<!-- towncrier release notes start -->\n"
