@@ -35,6 +35,6 @@ def launch():
     with contextlib.suppress(ImportError):
         from graiax.playwright import PlaywrightService
 
-        mgr.add_component(PlaywrightService())
+        mgr.add_component(PlaywrightService(auto_download_browser=False))
 
     mgr.launch_blocking()
