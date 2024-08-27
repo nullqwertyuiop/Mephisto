@@ -1,4 +1,7 @@
 from mephisto.library.model.metadata import StandardMetadata
+from .qq import MarketFace
+
+__all__ = ["MarketFace"]
 
 
 def export() -> StandardMetadata:

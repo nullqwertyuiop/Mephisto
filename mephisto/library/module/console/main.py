@@ -44,10 +44,6 @@ async def console_help(ctx: Context):
 
 @listen(MessageReceived)
 @include("console")
-@dispatch(
-    Twilight(
-        FullMatch("/stop"),
-    ),
-)
+@dispatch(Twilight(FullMatch("/stop")))
 async def console_stop():
     signal.raise_signal(signal.SIGINT)

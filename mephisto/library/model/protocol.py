@@ -1,3 +1,4 @@
+from abc import ABCMeta, abstractmethod
 from typing import Literal
 
 from avilla.core import BaseProtocol
@@ -15,14 +16,16 @@ from pydantic import AnyHttpUrl, BaseModel, ValidationError
 from yarl import URL
 
 
-class ProtocolConfig(BaseModel):
+class ProtocolConfig(BaseModel, metaclass=ABCMeta):
     protocol: str
     enabled: bool = True
 
     @property
-    def id(self):
-        return ...
+    @abstractmethod
+    def id(self) -> str:
+        pass
 
+    @abstractmethod
     def to_protocol(self) -> BaseProtocol:
         pass
 
@@ -120,3 +123,10 @@ class OneBotV11ProtocolRevConfig(ProtocolConfig):
 
 class ElizabethProtocolConfig(ProtocolConfig):
     protocol: Literal["mirai-api-http"] = "mirai-api-http"
+
+    @property
+    def id(self) -> str:
+        raise NotImplementedError("mirai-api-http protocol is not supported")
+
+    def to_protocol(self) -> BaseProtocol:
+        raise NotImplementedError("mirai-api-http protocol is not supported")
