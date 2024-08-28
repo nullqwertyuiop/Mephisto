@@ -5,7 +5,7 @@ from launart import Launart, Service
 from launart.status import Phase
 from loguru import logger
 
-from mephisto.shared import MEPHISTO_ROOT
+from mephisto.shared import MEPHISTO_ROOT, MEPHISTO_REPO
 
 
 class MephistoService(Service):
@@ -48,6 +48,11 @@ class MephistoService(Service):
 
         async with self.stage("preparing"):
             logger.info("[MephistoService] Current stage: preparing")
+
+            # TODO: Move into Updater
+            logger.info(
+                f"[MephistoService] Mephisto version: {MEPHISTO_REPO.head.commit.hexsha[:7]}"
+            )
 
         async with self.stage("cleanup"):
             logger.info("[MephistoService] Current stage: cleanup")

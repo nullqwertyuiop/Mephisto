@@ -20,10 +20,11 @@ dependencies = [
     "richuru>=0.1.1",
     "sqlalchemy>=2.0.29",
     "aiosqlite>=0.20.0",
+    "gitpython>=3.1.43",
 ]
 requires-python = ">=3.11"
 readme = "README.md"
-license = {text = "AGPL-3.0 License"}
+license = {text = "MIT License"}
 
 [project.optional-dependencies]
 playwright = [
