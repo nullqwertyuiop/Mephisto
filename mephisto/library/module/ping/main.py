@@ -4,8 +4,8 @@ from avilla.twilight.twilight import Twilight, FullMatch
 from graia.saya.builtins.broadcast.shortcut import listen, dispatch
 from graiax.fastapi.saya.route import get
 
-from mephisto.library.model.fastapi import SuccessResponse
 from mephisto.library.util.decorator import exclude
+from mephisto.shared.model import GenericSuccessResponse
 
 
 @listen(MessageReceived)
@@ -16,5 +16,5 @@ async def ping(ctx: Context):
 
 
 @get("/ping")
-async def web_ping() -> SuccessResponse:
-    return SuccessResponse(message="pong")
+async def web_ping() -> GenericSuccessResponse:
+    return GenericSuccessResponse(message="pong")

@@ -21,6 +21,7 @@ dependencies = [
     "sqlalchemy>=2.0.29",
     "aiosqlite>=0.20.0",
     "gitpython>=3.1.43",
+    "elaina-flywheel>=0.6.0",
 ]
 requires-python = ">=3.11"
 readme = "README.md"

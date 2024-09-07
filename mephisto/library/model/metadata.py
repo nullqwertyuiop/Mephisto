@@ -1,8 +1,11 @@
 from functools import partial
+from pathlib import Path
 from typing import Annotated, Literal
 
 from packaging.version import Version
 from pydantic import AfterValidator, BaseModel
+
+from mephisto.shared import MEPHISTO_ROOT
 
 
 def _version_validator(v: str):
@@ -41,6 +44,14 @@ class MephistoMetadata(BaseModel):
     def __hash__(self):
         return hash(self.__class__.__name__ + self.identifier)
 
+    @property
+    def stem(self):
+        return self.identifier.lstrip("library.").lstrip(f"{self.type}.")
+
+    @property
+    def path(self):
+        return Path(MEPHISTO_ROOT, *self.identifier.split("."))
+
 
 class StandardMetadata(MephistoMetadata):
     type: Literal["standard"] = "standard"
@@ -56,3 +67,11 @@ class ModuleMetadata(MephistoMetadata):
     @property
     def entrypoint(self):
         return f"{self.identifier}.main"
+
+    @property
+    def readme(self) -> Path:
+        return self.path / "README.md"
+
+    @property
+    def assets(self) -> Path:
+        return self.path / "assets"

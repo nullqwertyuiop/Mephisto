@@ -1,4 +1,5 @@
-from typing import Literal
+from http import HTTPStatus
+from typing import Any
 
 from pydantic import BaseModel
 
@@ -6,25 +7,34 @@ from pydantic import BaseModel
 class GenericResponse(BaseModel):
     """Generic response."""
 
-    code: int
+    code: HTTPStatus = HTTPStatus.OK
     """ Response code. """
+
     type: str
     """ Response type. """
+
     message: str
     """ Response message. """
-    data: dict | None = None
+
+    data: Any = None
     """ Response data. """
 
 
 class GenericErrorResponse(GenericResponse):
     """Generic error response."""
 
-    type: Literal["error"]
+    code: HTTPStatus = HTTPStatus.INTERNAL_SERVER_ERROR
+    """ Response code. """
+
+    type: str = "error"
     """ Response type. """
 
 
 class GenericSuccessResponse(GenericResponse):
     """Generic success response."""
 
-    type: Literal["success"]
+    code: HTTPStatus = HTTPStatus.OK
+    """ Response code. """
+
+    type: str = "success"
     """ Response type. """

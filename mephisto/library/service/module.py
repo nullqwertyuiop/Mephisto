@@ -2,6 +2,7 @@ import json
 import pkgutil
 from json import JSONDecodeError
 from pathlib import Path
+from typing import TypeVar
 
 from creart import it
 from graia.saya import Saya
@@ -13,6 +14,8 @@ from pydantic import ValidationError
 from mephisto.library.model.exception import RequirementResolveFailed
 from mephisto.library.model.metadata import ModuleMetadata
 from mephisto.shared import MEPHISTO_ROOT
+
+_T = TypeVar("_T")
 
 
 class ModuleStore:
@@ -27,11 +30,18 @@ class ModuleStore:
     def disabled(self):
         return self.modules - self.enabled
 
+    def get(self, identifier: str, _default: _T = None) -> ModuleMetadata | _T:
+        return next(
+            (module for module in self.modules if module.identifier == identifier),
+            _default,
+        )
+
 
 class ModuleService(Service):
     id = "mephisto.service/module"
     modules: set[ModuleMetadata]
     enabled: set[ModuleMetadata]
+    supported_interface_types: set = {ModuleStore}
 
     def __init__(self):
         self.modules = set()
@@ -48,7 +58,10 @@ class ModuleService(Service):
 
     @property
     def stages(self) -> set[Phase]:
-        return {"preparing"}
+        return {"preparing", "blocking"}
+
+    def get_interface(self, _: type[ModuleStore]):
+        return ModuleStore(self.modules, self.enabled)
 
     @staticmethod
     def parse_metadata(module: Path) -> ModuleMetadata:
@@ -170,12 +183,11 @@ class ModuleService(Service):
                 saya.require(module.entrypoint)
         self.modules |= set(resolved)
 
-    @property
-    def store(self):
-        return ModuleStore(self.modules, self.enabled)
-
     async def launch(self, manager: Launart):
         self.require_modules(Path("library") / "module", Path("module"))
 
         async with self.stage("preparing"):
             logger.success("[ModuleService] Required all modules")
+
+        async with self.stage("blocking"):
+            await manager.status.wait_for_sigexit()
