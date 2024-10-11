@@ -1,14 +1,16 @@
-import json
 import pkgutil
 from json import JSONDecodeError
 from pathlib import Path
 from typing import TypeVar
 
+import toml
 from creart import it
 from graia.saya import Saya
 from launart import Launart, Service
 from launart.status import Phase
 from loguru import logger
+from pdm.core import Core as PDMCore
+from pdm.models.requirements import FileRequirement
 from pydantic import ValidationError
 
 from mephisto.library.model.exception import RequirementResolveFailed
@@ -43,9 +45,12 @@ class ModuleService(Service):
     enabled: set[ModuleMetadata]
     supported_interface_types: set = {ModuleStore}
 
+    pdm_core: PDMCore
+
     def __init__(self):
         self.modules = set()
         self.enabled = set()
+        self.pdm_core = PDMCore()
         super().__init__()
 
     @property
@@ -66,30 +71,43 @@ class ModuleService(Service):
     @staticmethod
     def parse_metadata(module: Path) -> ModuleMetadata:
         try:
-            return ModuleMetadata.model_validate_json(
-                (module / "metadata.json").read_text()
+            pyproject = toml.loads((module / "pyproject.toml").read_text())
+            return ModuleMetadata.model_validate(
+                pyproject["mephisto"]
+                | {
+                    "version": pyproject["project"]["version"],
+                    "description": pyproject["project"]["description"],
+                    "authors": pyproject["project"]["authors"],
+                }
             )
         except ValidationError as e:
             logger.error(f"[ModuleService] {module.name} metadata is invalid")
             raise e
 
-    @staticmethod
-    def generate_metadata(module: Path) -> ModuleMetadata:
+    def generate_metadata(self, module: Path) -> ModuleMetadata:
         module = module.resolve().relative_to(MEPHISTO_ROOT)
         name = module.parts[-1]
         identifier = ".".join(module.parts)
-        return ModuleMetadata(identifier=identifier, name=name)
-
-    @staticmethod
-    def write_metadata(metadata: ModuleMetadata):
-        module_path = Path(metadata.identifier.replace(".", "/"))
-        with (module_path / "metadata.json").open("w", encoding="utf-8") as f:
-            f.write(
-                json.dumps(
-                    metadata.model_dump(exclude={"type"}), indent=4, ensure_ascii=False
-                )
-            )
-            f.write("\n")
+        metadata = ModuleMetadata(identifier=identifier, name=name)
+        project = self.pdm_core.create_project(module)
+        project.pyproject.metadata.update(
+            {
+                "name": identifier,
+                "version": metadata.version,
+                "description": metadata.description,
+                "dependencies": [],
+                "authors": metadata.authors,
+            }
+        )
+        project.pyproject.settings.update({"distribution": True})
+        project.pyproject._data.setdefault("build-system", {}).update(  # noqa
+            {"requires": ["pdm-backend"], "build-backend": "pdm.backend"}
+        )
+        project.pyproject._data.setdefault("mephisto", {}).update(  # noqa
+            metadata.model_dump(exclude={"type", "version", "description", "authors"})
+        )
+        project.pyproject.write(show_message=False)
+        return metadata
 
     @staticmethod
     def standardize(module: Path) -> Path:
@@ -133,7 +151,6 @@ class ModuleService(Service):
                     prepared.append(metadata)
                 except (ValidationError, FileNotFoundError, JSONDecodeError):
                     metadata = self.generate_metadata(module_path)
-                    self.write_metadata(metadata)
                     if self.noload_flag(module_path):
                         logger.warning(
                             f"[ModuleService] Skipped module {module.name} due to noload flag"
@@ -154,7 +171,7 @@ class ModuleService(Service):
             layer = {
                 module
                 for module in unresolved
-                if {dep.identifier for dep in module.dependencies} <= resolved
+                if {dep.identifier for dep in module.dependencies} <= resolved  # type: ignore
             }
             if not layer:
                 logger.error(
@@ -174,17 +191,47 @@ class ModuleService(Service):
         logger.success("[ModuleService] Resolved module dependencies")
         return result
 
-    def require_modules(self, *paths: Path):
+    def handle_dependency(self, module: ModuleMetadata):
+        project = self.pdm_core.create_project(MEPHISTO_ROOT)
+        project.add_dependencies(
+            [FileRequirement(name=module.identifier, path=module.path)],
+            to_group="mephisto",
+            show_message=False,
+        )
+
+    def require_modules(self, *modules: ModuleMetadata, retry: bool = True):
+        retry_modules = []
+        pdm_install = False
         saya = it(Saya)
+        with saya.module_context():
+            for module in modules:
+                try:
+                    saya.require(module.entrypoint)
+                except ImportError:
+                    self.handle_dependency(module)
+                    pdm_install = True
+                    if retry:
+                        retry_modules.append(module)
+                except Exception as e:
+                    logger.error(
+                        f"[ModuleService] Failed to require {module.identifier}: {e}"
+                    )
+                    if retry:
+                        retry_modules.append(module)
+        if pdm_install:
+            self.pdm_core.main(["lock", "--group", ":all"])
+            self.pdm_core.main(["install", "--group", ":all"])
+        if retry_modules:
+            self.require_modules(*retry_modules, retry=False)
+        self.modules |= set(modules)
+
+    def require_path(self, *paths: Path, retry: bool = True):
         prepared = self.prepare_metadata(*paths)
         resolved = self.resolve(*prepared)
-        with saya.module_context():
-            for module in resolved:
-                saya.require(module.entrypoint)
-        self.modules |= set(resolved)
+        self.require_modules(*resolved, retry=retry)
 
     async def launch(self, manager: Launart):
-        self.require_modules(Path("library") / "module", Path("module"))
+        self.require_path(Path("library") / "module", Path("module"))
 
         async with self.stage("preparing"):
             logger.success("[ModuleService] Required all modules")

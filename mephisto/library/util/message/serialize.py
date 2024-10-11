@@ -11,6 +11,7 @@ from avilla.core.elements import (
     Reference,
     Face,
 )
+from avilla.standard.qq.elements import MarketFace
 from flywheel import SimpleOverload, FnCollectEndpoint, global_collect, TypeOverload
 from graia.amnesia.message.chain import MessageChain
 from graia.amnesia.message.element import Element, Text
@@ -108,10 +109,22 @@ def serialize_json_face(raw_type: str, element: Face) -> dict:
     return {"_type": "Face", "id": element.id, "name": element.name}
 
 
+@global_collect
+@impl_serialize(raw_type="json", element=MarketFace)
+def serialize_json_market_face(raw_type: str, element: MarketFace) -> dict:
+    return {
+        "_type": "MarketFace",
+        "id": element.id,
+        "tab_id": element.tab_id,
+        "key": element.key,
+        "summary": element.summary,
+    }
+
+
 # </editor-fold>
 
 
 def serialize(chain: MessageChain) -> str:
     return "json:" + json.dumps(
-        [serialize_element("json", element) for element in chain]
+        [serialize_element("json", element) for element in chain], ensure_ascii=False
     )

@@ -6,6 +6,10 @@ class MessageRecordNotFound(Exception):
     pass
 
 
+class AttachmentRecordNotFound(Exception):
+    pass
+
+
 class MessageDeserializationFailed(Exception):
     _TEXT_PATTERN = "Failed to deserialize {element} ({raw_type}) Element: {raw}"
 

@@ -48,7 +48,7 @@ class TemporaryFile:
                 f"Eliminating temporary file: {self.file} in {self.lifespan.total_seconds()}s"
             )
             self._timer = it(asyncio.AbstractEventLoop).call_later(
-                self.lifespan.total_seconds(), self.unlink
+                self.lifespan.total_seconds(), self.unlink  # type: ignore
             )
         else:
             logger.debug(f"Eliminating temporary file: {self.file}")
@@ -62,8 +62,5 @@ class TemporaryFile:
 
 def fetch_file(*parts: str, scope: Path) -> Path | None:
     if any(True for part in parts if part.startswith("..") or not part):
-        print("filtered")
         return None
-    print(f"{parts = }")
-    print(f"{next(scope.rglob(Path(*parts).as_posix()), None) = }")
     return next(scope.rglob(Path(*parts).as_posix()), None)

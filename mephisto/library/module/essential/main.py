@@ -1,9 +1,10 @@
-import hashlib
 import json
 from http import HTTPStatus
+from pathlib import Path
 from urllib.parse import unquote
 
-from avilla.core import Context, Message, Avilla, Resource, Selector
+import filetype
+from avilla.core import Context, Message, Avilla
 from avilla.standard.core.message import (
     MessageReceived,
     MessageSent,
@@ -13,14 +14,12 @@ from avilla.standard.core.message import (
 from creart import it
 from fastapi.exceptions import HTTPException
 from fastapi.responses import FileResponse
-from graia.amnesia.message import MessageChain, Text
 from graia.broadcast import PropagationCancelled
 from graia.saya.builtins.broadcast.shortcut import listen, priority
 from graiax.fastapi.saya.route import get
 from launart import Launart
 
 from mephisto import __version__
-from mephisto.library.module.essential._model import Attachment
 from mephisto.library.service import DataService
 from mephisto.library.service.module import ModuleStore
 from mephisto.library.util.const import (
@@ -28,14 +27,15 @@ from mephisto.library.util.const import (
     MODULE_ASSET_ENDPOINT,
     TEMPORARY_FILES_ROOT,
 )
+from mephisto.library.util.message.resource import extract_resources, save_resources
 from mephisto.library.util.message.serialize import serialize
 from mephisto.library.util.orm.table import RecordTable, AttachmentTable
 from mephisto.library.util.storage import fetch_file
 from mephisto.shared import (
-    DATA_ROOT,
     GenericSuccessResponse,
     MEPHISTO_REPO,
     GenericErrorResponse,
+    DATA_ROOT,
 )
 
 
@@ -46,33 +46,14 @@ async def ignore_self_message(ctx: Context):
         raise PropagationCancelled()
 
 
-def quote_message(message: MessageChain) -> tuple[str, list[tuple[Resource, Selector]]]:
-    resources: list[tuple[Resource, Selector]] = []
-    for element in message:
-        if hasattr(element, "resource") and isinstance(element.resource, Resource):  # type: ignore
-            resources.append((element.resource, element.resource.to_selector()))  # type: ignore
-        elif isinstance(element, Text):
-            element.text.replace("[", "\\[")
-    return serialize(message), resources
-
-
-async def dump_attachment(ctx: Context, resource: Resource) -> str:
-    attachment = Attachment(ctx, resource)
-    dumped_attachment = json.dumps(attachment.__dict__).encode()
-    md5 = hashlib.md5(dumped_attachment).hexdigest()
-    path = DATA_ROOT / "attachment" / md5[:2] / md5[2:4] / f"{md5}.json"
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_bytes(dumped_attachment)
-    return path.relative_to(DATA_ROOT).as_posix()
-
-
 @listen(MessageReceived, MessageSent)
 @priority(-1)
 async def record_received(avilla: Avilla, ctx: Context, message: Message):
     registry = avilla.launch_manager.get_component(DataService).registry
     main_engine = await registry.create("main")
     engine = await registry.create(message.scene)
-    content, resources = quote_message(message.content)
+    resources = extract_resources(message.content)
+    content = serialize(message.content)
     await engine.insert_or_update(
         RecordTable,
         RecordTable.message_id == message.id,
@@ -82,22 +63,25 @@ async def record_received(avilla: Avilla, ctx: Context, message: Message):
         selector=message.to_selector().display,
         time=message.time,
         content=content,
-        attachments=",".join(resource.display for (_, resource) in resources),
+        attachments=json.dumps(
+            {k: v.to_selector().display for k, _, v in resources}, ensure_ascii=False
+        ),
         reply_to=message.reply.display if message.reply else None,
     )
 
-    for resource, selector in resources:
+    for _, _, resource in resources:
         if await main_engine.scalar_eager(
-            AttachmentTable, AttachmentTable.pattern == selector.display
+            AttachmentTable, AttachmentTable.pattern == resource.to_selector().display
         ):
             continue
-        dumped = await dump_attachment(ctx, resource)
-        await main_engine.insert_or_update(
-            AttachmentTable,
-            AttachmentTable.pattern == selector.display,
-            pattern=selector.display,
-            file_path=dumped,
-        )
+        dumped = (await save_resources(ctx, resource))[0]
+        if isinstance(dumped, Path):
+            await main_engine.insert_or_update(
+                AttachmentTable,
+                AttachmentTable.pattern == resource.to_selector().display,
+                pattern=resource.to_selector().display,
+                file_path=dumped.relative_to(DATA_ROOT).as_posix(),
+            )
 
 
 @listen(MessageEdited)
@@ -106,7 +90,8 @@ async def record_edited(avilla: Avilla, ctx: Context, message: Message):
     registry = avilla.launch_manager.get_component(DataService).registry
     main_engine = await registry.create("main")
     engine = await registry.create(message.scene)
-    content, resources = quote_message(message.content)
+    resources = extract_resources(message.content)
+    content = serialize(message.content)
     await engine.update(
         RecordTable,
         RecordTable.message_id == message.id,
@@ -116,24 +101,27 @@ async def record_edited(avilla: Avilla, ctx: Context, message: Message):
         selector=message.to_selector().display,
         time=message.time,
         content=content,
-        attachments=",".join(resource.display for (_, resource) in resources),
+        attachments=json.dumps(
+            {k: v.to_selector().display for k, _, v in resources}, ensure_ascii=False
+        ),
         reply_to=message.reply.display if message.reply else None,
         edited=True,
         edit_time=message.time,
     )
 
-    for resource, selector in resources:
+    for _, _, resource in resources:
         if await main_engine.scalar_eager(
-            AttachmentTable, AttachmentTable.pattern == selector.display
+            AttachmentTable, AttachmentTable.pattern == resource.to_selector().display
         ):
             continue
-        dumped = await dump_attachment(ctx, resource)
-        await main_engine.insert_or_update(
-            AttachmentTable,
-            AttachmentTable.pattern == selector.display,
-            pattern=selector.display,
-            file_path=dumped,
-        )
+        dumped = (await save_resources(ctx, resource))[0]
+        if isinstance(dumped, Path):
+            await main_engine.insert_or_update(
+                AttachmentTable,
+                AttachmentTable.pattern == resource.to_selector().display,
+                pattern=resource.to_selector().display,
+                file_path=dumped.relative_to(DATA_ROOT).as_posix(),
+            )
 
 
 @listen(MessageRevoked)
@@ -172,6 +160,8 @@ async def fastapi_version():
 @get(TEMPORARY_FILE_ENDPOINT)
 async def fastapi_temp_file(id: str):
     if file := fetch_file(id, scope=TEMPORARY_FILES_ROOT):
+        if mime := filetype.guess_mime(file.read_bytes()):
+            return FileResponse(file, filename=file.name, media_type=mime)
         return FileResponse(file, filename=file.name)
     raise HTTPException(
         HTTPStatus.NOT_FOUND,
@@ -185,6 +175,8 @@ async def fastapi_temp_file(id: str):
 async def fastapi_module_asset(module: str, asset: str):
     if metadata := it(Launart).get_interface(ModuleStore).get(module):
         if file := fetch_file(*unquote(asset).split("/"), scope=metadata.assets):
+            if mime := filetype.guess_mime(file.read_bytes()):
+                return FileResponse(file, filename=file.name, media_type=mime)
             return FileResponse(file, filename=file.name)
     raise HTTPException(
         HTTPStatus.NOT_FOUND,

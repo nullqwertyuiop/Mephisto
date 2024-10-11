@@ -22,6 +22,7 @@ def _update_pyproject():
     parent_data["project"]["optional-dependencies"]["mephisto"] = child_data["project"][
         "optional-dependencies"
     ].get("mephisto", [])
+    parent_data["project"].pop("readme")
     (MEPHISTO_ROOT / "pyproject.toml").write_text(toml.dumps(parent_data))
 
 
@@ -49,7 +50,7 @@ def run():
     setup_logger(LOG_ROOT, 7)
     _ensure_daemon()
 
-    if (MEPHISTO_ROOT / "pyproject.toml").is_file():
+    if not (MEPHISTO_ROOT / "pyproject.toml").is_file():
         _init()
 
     _update_pyproject()

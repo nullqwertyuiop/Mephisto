@@ -39,7 +39,7 @@ class MephistoMetadata(BaseModel):
     name: str = ""
     version: Annotated[str, AfterValidator(_version_validator)] = "0.1.0"
     description: str = ""
-    author: list[str] = []
+    authors: list[dict[str, str]] = []
 
     def __hash__(self):
         return hash(self.__class__.__name__ + self.identifier)

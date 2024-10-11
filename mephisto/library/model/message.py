@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from datetime import datetime
+from typing import Self
 
 from avilla.core import Selector
 from creart import it
@@ -19,11 +20,10 @@ class RebuiltMessage:
     selector: Selector
     time: datetime
     content: MessageChain
-    attachments: list[Selector]
     reply_to: Selector | None
 
     @classmethod
-    async def from_selector(cls, selector: Selector, scene: Selector):
+    async def from_selector(cls, selector: Selector, scene: Selector) -> Self:
         registry = it(Launart).get_component(DataService).registry
         engine = await registry.create(scene)
         async with engine.scalar(
@@ -38,9 +38,6 @@ class RebuiltMessage:
                 selector=Selector.from_follows(str(result.selector)),
                 time=result.time,  # type: ignore
                 content=deserialize(result.content),  # type: ignore
-                attachments=[
-                    Selector.from_follows(i) for i in result.attachments.split(",") if i
-                ],
                 reply_to=(
                     Selector.from_follows(str(result.reply_to))
                     if result.reply_to  # type: ignore

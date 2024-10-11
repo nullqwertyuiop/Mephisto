@@ -1,0 +1,21 @@
+[project]
+name = "library.module.console"
+version = "0.1.0"
+description = "控制台交互模块"
+dependencies = []
+authors = [
+    {name = "nullqwertyuiop", email = "null@member.fsf.org"}
+]
+
+[tool.pdm]
+distribution = false
+
+[build-system]
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
+
+[mephisto]
+name = "控制台"
+identifier = "library.module.console"
+dependencies = []
+standards = []
