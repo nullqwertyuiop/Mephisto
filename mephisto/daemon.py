@@ -1,5 +1,6 @@
 import asyncio
 import contextlib
+from http import HTTPStatus
 import os
 import random
 import signal
@@ -9,10 +10,12 @@ import subprocess
 import sys
 import time
 from contextvars import ContextVar
+from typing import cast
 
 from creart import it
 from fastapi import FastAPI, HTTPException
 from graia.amnesia.builtins.asgi import UvicornASGIService
+from graia.amnesia.builtins.asgi.asgitypes import ASGI3Application
 from graiax.fastapi import FastAPIService
 from launart import Launart, Service
 from loguru import logger
@@ -25,7 +28,7 @@ setup_logger(LOG_ROOT / "daemon", 7)
 
 fastapi = FastAPI(openapi_url=None, docs_url=None, redoc_url=None)
 fastapi.add_middleware(
-    CORSMiddleware,
+    CORSMiddleware,  # type: ignore
     allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
@@ -65,7 +68,7 @@ async def regen_token(token: str):
     logger.info("Daemon Command received: regen_token")
     setup_token()
     return GenericSuccessResponse(
-        code=200,
+        code=HTTPStatus.OK,
         type="success",
         message="Token regenerated",
         data={"token": token_ctx.get()},
@@ -87,7 +90,7 @@ async def daemon_shutdown(token: str):
         signal.SIGINT if sys.platform != "win32" else signal.CTRL_C_EVENT,
     )
     return GenericSuccessResponse(
-        code=200,
+        code=HTTPStatus.OK,
         type="success",
         message="Daemon shutdown",
     )
@@ -104,7 +107,7 @@ async def shutdown(token: str):
     except MephistoNotRunning as e:
         raise HTTPException(400, "Mephisto not running") from e
     return GenericSuccessResponse(
-        code=200,
+        code=HTTPStatus.OK,
         type="success",
         message="Mephisto shutdown",
     )
@@ -121,7 +124,7 @@ async def boot(token: str, keep_alive: bool = True):
     except MephistoAlreadyRunning as e:
         raise HTTPException(400, "Mephisto already running") from e
     return GenericSuccessResponse(
-        code=200,
+        code=HTTPStatus.OK,
         type="success",
         message="Mephisto booted",
     )
@@ -138,7 +141,7 @@ async def restart(token: str, keep_alive: bool = True):
     except MephistoNotRunning as e:
         raise HTTPException(400, "Mephisto not running") from e
     return GenericSuccessResponse(
-        code=200,
+        code=HTTPStatus.OK,
         type="success",
         message="Mephisto restarted",
     )
@@ -222,7 +225,7 @@ class DaemonService(Service):
         return set()
 
     @property
-    def stages(self):
+    def stages(self):  # type: ignore
         return {"preparing", "blocking", "cleanup"}
 
     async def launch(self, manager: Launart):
@@ -244,6 +247,12 @@ class DaemonService(Service):
 def launch_daemon(port: int):
     mgr = it(Launart)
     mgr.add_component(DaemonService())
-    mgr.add_component(UvicornASGIService("127.0.0.1", port or get_unoccupied_port()))
+    mgr.add_component(
+        UvicornASGIService(
+            "127.0.0.1",
+            port or get_unoccupied_port(),
+            {"": cast(ASGI3Application, fastapi)},
+        )
+    )
     mgr.add_component(FastAPIService(fastapi))
     mgr.launch_blocking()

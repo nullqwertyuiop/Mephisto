@@ -1,0 +1,1 @@
+Fixed an issue where ASGI service mounts are not configured in daemon
