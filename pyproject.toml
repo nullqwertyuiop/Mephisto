@@ -25,7 +25,7 @@ dependencies = [
     "filetype>=1.2.0",
     "pdm>=2.19.1",
 ]
-requires-python = ">=3.12"
+requires-python = "<3.14,>=3.12"
 readme = "README.md"
 license = {text = "MIT License"}
 
@@ -38,24 +38,12 @@ mysql = [
     "aiomysql>=0.2.0",
 ]
 
-[tool.pdm.build]
-includes = []
-
 [build-system]
 requires = ["pdm-backend"]
 build-backend = "pdm.backend"
 
 [tool.isort]
 profile = "black"
-
-[tool.pdm.dev-dependencies]
-dev = [
-    "pre-commit>=3.5.0",
-    "towncrier>=23.11.0",
-    "flake8>=6.1.0",
-    "isort>=5.12.0",
-    "black>=23.11.0",
-]
 
 [tool.towncrier]
 package = "mephisto"
@@ -101,3 +89,16 @@ showcontent = true
 directory = "chore"
 name = "Other tasks"
 showcontent = true
+
+[tool.pdm.build]
+includes = []
+
+[tool.pdm.dev-dependencies]
+dev = [
+    "pre-commit>=3.5.0",
+    "towncrier>=23.11.0",
+    "flake8>=6.1.0",
+    "isort>=5.12.0",
+    "black>=23.11.0",
+    "-e git+https://github.com/nullqwertyuiop/Avilla.git@canary/edge#egg=avilla-workspace",
+]
