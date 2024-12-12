@@ -1,30 +1,42 @@
-from __future__ import annotations
-
 import hashlib
-from copy import deepcopy
-from importlib.resources import Resource
 from pathlib import Path
 from typing import TypeVar
 
 import filetype
 from avilla.core import Context, Resource
+from avilla.core.builtins.capability import CoreCapability
+from avilla.core.builtins.resource_fetch import CoreResourceFetchPerform
+from avilla.core.resource import LocalFileResource, RawResource, UrlResource
+from avilla.core.ryanvk.collector.application import ApplicationCollector
+from avilla.core.selector import Selector
+from avilla.standard.qq.elements import MarketFace
 from graia.amnesia.message import Element, MessageChain
 from loguru import logger
 
+from mephisto.library.model.exception import AttachmentRecordNotFound
 from mephisto.shared import DATA_ROOT
 
-from avilla.core.resource import LocalFileResource, RawResource, UrlResource
-from avilla.core.ryanvk.collector.application import ApplicationCollector
-from avilla.core.builtins.capability import CoreCapability
 
-
-class RecordAttachmentResource(Resource[bytes]): ...
+class RecordAttachmentResource(Resource[bytes]):
+    @property
+    def digest(self):
+        return self.selector.pattern["digest"]
 
 
 class RecordResourceFetchPerform((m := ApplicationCollector())._):
+    m.namespace = "mephisto/core::resource"
+    m.identify = "fetch"
+
     @m.entity(CoreCapability.fetch, resource=RecordAttachmentResource)
-    async def fetch_record(self, resource: RecordAttachmentResource):
-        pass
+    async def fetch_attachment(self, resource: RecordAttachmentResource):
+        if file := next(
+            (
+                DATA_ROOT / "attachment" / resource.digest[:2] / resource.digest[2:4]
+            ).rglob(f"{resource.digest}*"),
+            None,
+        ):
+            return file.read_bytes()
+        raise AttachmentRecordNotFound(resource)
 
 
 TR = TypeVar("TR", bound=Resource)
@@ -38,41 +50,39 @@ def extract_resources(message: MessageChain) -> list[tuple[int, Element, Resourc
     return resources
 
 
-def fix_multimedia_nt_qq(
-    resource: TR,
-) -> TR:
-    original = "https://multimedia.nt.qq.com.cn"
-    replaced = "http://multimedia.nt.qq.com.cn"  # noqa
-    selector = deepcopy(resource.selector)
-    selector = selector.modify(
-        {k: v.replace(original, replaced) for k, v in selector.pattern.items()}
-    )
-    resource.selector = selector
-    if hasattr(resource, "url"):
-        resource.url = resource.url.replace(original, replaced)
-    return resource
-
-
-_preprocessors: dict = {
-    lambda resource: "https://multimedia.nt.qq.com.cn"
-    in resource.selector.display: fix_multimedia_nt_qq,
-}
+_translation: dict = {MarketFace: lambda _: UrlResource(_.url)}
 
 
 async def save_resources(
-    ctx: Context, *resources: Resource, base_path: Path = DATA_ROOT / "attachment"
+    ctx: Context,
+    message_chain: MessageChain,
+    base_path: Path = DATA_ROOT / "attachment",
 ) -> list[Path | Exception]:
     results: list[Path | Exception] = []
-    for resource in resources:
+    for element in message_chain:
+        if type(element) in _translation:
+            resource = _translation[type(element)](element)
+            setattr(element, "resource", resource)
+        elif not hasattr(element, "resource") or not isinstance(
+            element.resource, Resource
+        ):
+            continue
+        else:
+            resource: Resource = element.resource  # type: ignore
         try:
-            for prep in _preprocessors:
-                if prep(resource):
-                    resource = _preprocessors[prep](resource)
-
             logger.debug(
                 f"Fetching resource {type(resource)}({resource.to_selector().display})"
             )
-            raw = await ctx.fetch(resource)
+            if isinstance(resource, LocalFileResource):
+                raw = await CoreResourceFetchPerform(ctx.staff).fetch_localfile(
+                    resource
+                )
+            elif isinstance(resource, RawResource):
+                raw = await CoreResourceFetchPerform(ctx.staff).fetch_raw(resource)
+            elif isinstance(resource, UrlResource):
+                raw = await CoreResourceFetchPerform(ctx.staff).fetch_url(resource)
+            else:
+                raw = await ctx.fetch(resource)
             digest = hashlib.md5(raw).hexdigest()
             path = base_path / digest[:2] / digest[2:4] / digest
             path.parent.mkdir(parents=True, exist_ok=True)
@@ -83,6 +93,13 @@ async def save_resources(
             path.write_bytes(raw)
             logger.debug(f"Saved resource to {path}")
             results.append(path)
+            setattr(
+                element,
+                "resource",
+                RecordAttachmentResource(
+                    Selector().land("mephisto-attachment").digest(digest)
+                ),
+            )
         except NotImplementedError as e:
             logger.error(
                 f"Fetching resource {type(resource)}"

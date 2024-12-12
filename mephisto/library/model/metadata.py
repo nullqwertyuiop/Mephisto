@@ -3,8 +3,9 @@ from pathlib import Path
 from typing import Annotated, Literal
 
 from packaging.version import Version
-from pydantic import AfterValidator, BaseModel
+from pydantic import AfterValidator, BaseModel, Field
 
+from mephisto.library.util.context import module_instance
 from mephisto.shared import MEPHISTO_ROOT
 
 
@@ -39,7 +40,7 @@ class MephistoMetadata(BaseModel):
     name: str = ""
     version: Annotated[str, AfterValidator(_version_validator)] = "0.1.0"
     description: str = ""
-    authors: list[dict[str, str]] = []
+    authors: list[dict[str, str]] = Field(default_factory=list)
 
     def __hash__(self):
         return hash(self.__class__.__name__ + self.identifier)
@@ -61,8 +62,8 @@ class StandardMetadata(MephistoMetadata):
 class ModuleMetadata(MephistoMetadata):
     type: Literal["module"] = "module"
     identifier: Annotated[str, AfterValidator(_module_identifier_validator)]
-    dependencies: list["ModuleMetadata"] = []
-    standards: list[StandardMetadata] = []
+    dependencies: list["ModuleMetadata"] = Field(default_factory=list)
+    standards: list[StandardMetadata] = Field(default_factory=list)
 
     @property
     def entrypoint(self):
@@ -75,3 +76,7 @@ class ModuleMetadata(MephistoMetadata):
     @property
     def assets(self) -> Path:
         return self.path / "assets"
+
+    @staticmethod
+    def current() -> "ModuleMetadata":
+        return module_instance.get()

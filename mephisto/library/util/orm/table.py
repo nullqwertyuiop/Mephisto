@@ -1,4 +1,4 @@
-from sqlalchemy import String, DateTime, Text, Integer, Column, Boolean
+from sqlalchemy import Boolean, Column, DateTime, Integer, String, Text
 
 from mephisto.library.util.orm.base import Base
 
@@ -59,3 +59,30 @@ class StatisticsTable(Base):
 
     deleted = Column(Boolean(), default=False)
     delete_time = Column(DateTime(timezone=True), nullable=True)
+
+
+class CacheTable(Base):
+    __tablename__ = "cache"
+
+    id = Column(Integer(), primary_key=True)
+    key = Column(String(length=256))
+    file = Column(Text())
+
+    effective = Column(Boolean(), default=True)
+    create_time = Column(DateTime(timezone=True), nullable=True)
+    expire_time = Column(DateTime(timezone=True), nullable=True)
+
+
+class PermissionTable(Base):
+    __tablename__ = "permission"
+
+    id = Column(Integer(), primary_key=True)
+    scene = Column(String(length=64))
+    client = Column(String(length=64))
+
+    scope = Column(String(length=64))
+    target = Column(String(length=64))
+
+    effective = Column(Boolean(), default=True)
+    create_time = Column(DateTime(timezone=True), nullable=True)
+    expire_time = Column(DateTime(timezone=True), nullable=True)

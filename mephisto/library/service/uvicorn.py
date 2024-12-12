@@ -5,7 +5,7 @@ from fastapi import FastAPI
 from graia.amnesia.builtins.asgi import UvicornASGIService
 from graia.amnesia.builtins.asgi.asgitypes import ASGI3Application
 from graia.saya import Saya
-from graiax.fastapi import FastAPIService, FastAPIBehaviour
+from graiax.fastapi import FastAPIBehaviour, FastAPIService
 from kayaku import create
 from launart import Launart, Service
 from launart.status import Phase

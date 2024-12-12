@@ -7,9 +7,11 @@ from mephisto.library.util.const import TEMPORARY_FILES_ROOT
 from mephisto.library.util.orm.base import DatabaseEngine
 from mephisto.library.util.orm.registry import DatabaseRegistry
 from mephisto.library.util.orm.table import (
-    RecordTable,
     AttachmentTable,
+    CacheTable,
     ConfigTable,
+    PermissionTable,
+    RecordTable,
     StatisticsTable,
 )
 
@@ -20,11 +22,14 @@ class DataService(Service):
 
     @property
     def required(self):
-        return set()
+        return {"web.render/graiax.playwright"}
 
     @property
     def stages(self) -> set[Phase]:
-        return {"preparing", "cleanup"}
+        return {"preparing", "blocking", "cleanup"}
+
+    async def get_main_engine(self):
+        return await self.registry.create("main")
 
     @staticmethod
     def ensure_temp():
@@ -38,6 +43,8 @@ class DataService(Service):
             logger.success(f"[DataService] Eliminated {len(files)} temporary files")
 
     async def launch(self, manager: Launart):
+        self.registry = DatabaseRegistry()
+
         async with self.stage("preparing"):
             self.ensure_temp()
 
@@ -45,11 +52,13 @@ class DataService(Service):
             kayaku.save_all()
             logger.success("[DataService] Initialized all configurations")
 
-            self.registry = DatabaseRegistry()
             main_engine = await self.registry.create("main")
             await main_engine.create(ConfigTable)
             await main_engine.create(AttachmentTable)
             await main_engine.create(StatisticsTable)
+            await main_engine.create(CacheTable)
+            await main_engine.create(PermissionTable)
+
             logger.success("[DataService] Initialized main database")
 
             @self.registry.hook

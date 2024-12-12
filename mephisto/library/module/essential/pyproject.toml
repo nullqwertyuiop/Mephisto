@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "维持 Mephisto 的基本服务正常运行"
 dependencies = []
 authors = [
-    {name = "nullqwertyuiop", email = "null@member.fsf.org"}
+    { name = "nullqwertyuiop", email = "null@member.fsf.org" }
 ]
 
 [tool.pdm]

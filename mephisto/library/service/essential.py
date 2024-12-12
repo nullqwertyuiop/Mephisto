@@ -1,11 +1,13 @@
 from pathlib import Path
 
 from avilla.core import Avilla
+from kayaku import create
 from launart import Launart, Service
 from launart.status import Phase
 from loguru import logger
 
-from mephisto.shared import MEPHISTO_ROOT, MEPHISTO_REPO
+from mephisto.library.model.config import MephistoConfig
+from mephisto.shared import MEPHISTO_REPO, MEPHISTO_ROOT
 
 
 class MephistoService(Service):
@@ -17,7 +19,18 @@ class MephistoService(Service):
         return self.avilla.broadcast
 
     def __init__(self):
-        self.avilla = Avilla()
+        self.ensure_path("config")
+        self.ensure_path("data")
+        self.ensure_path("module")
+        self.ensure_path("standard")
+        logger.success("[MephistoService] Ensured all paths")
+
+        cfg: MephistoConfig = create(MephistoConfig)
+
+        self.avilla = Avilla(message_cache_size=cfg.advanced.message_cache_size)
+        self.apply_perform()
+        logger.debug("[MephistoService] Initialized Avilla")
+
         super().__init__()
 
     @property
@@ -39,12 +52,13 @@ class MephistoService(Service):
         if not (p := Path(MEPHISTO_ROOT, path)).is_dir():
             p.mkdir(parents=True)
 
+    def apply_perform(self):
+        from mephisto.library.util.message.resource import RecordResourceFetchPerform
+
+        RecordResourceFetchPerform.apply_to(self.avilla.global_artifacts)
+        logger.debug("[MephistoService] Applied RecordResourceFetchPerform to Avilla")
+
     async def launch(self, manager: Launart):
-        self.ensure_path("config")
-        self.ensure_path("data")
-        self.ensure_path("module")
-        self.ensure_path("standard")
-        logger.success("[MephistoService] Ensured all paths")
 
         async with self.stage("preparing"):
             logger.info("[MephistoService] Current stage: preparing")

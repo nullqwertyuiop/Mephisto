@@ -88,5 +88,4 @@ def export() -> StandardMetadata:
         name="Page",
         version="0.0.1",
         description="A standard for page building",
-        author=["nullqwertyuiop"],
     )

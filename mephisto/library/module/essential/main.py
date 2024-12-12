@@ -1,15 +1,14 @@
 import json
 from http import HTTPStatus
-from pathlib import Path
 from urllib.parse import unquote
 
 import filetype
-from avilla.core import Context, Message, Avilla
+from avilla.core import Avilla, Context, Message
 from avilla.standard.core.message import (
-    MessageReceived,
-    MessageSent,
     MessageEdited,
+    MessageReceived,
     MessageRevoked,
+    MessageSent,
 )
 from creart import it
 from fastapi.exceptions import HTTPException
@@ -23,20 +22,15 @@ from mephisto import __version__
 from mephisto.library.service import DataService
 from mephisto.library.service.module import ModuleStore
 from mephisto.library.util.const import (
-    TEMPORARY_FILE_ENDPOINT,
     MODULE_ASSET_ENDPOINT,
+    TEMPORARY_FILE_ENDPOINT,
     TEMPORARY_FILES_ROOT,
 )
 from mephisto.library.util.message.resource import extract_resources, save_resources
 from mephisto.library.util.message.serialize import serialize
-from mephisto.library.util.orm.table import RecordTable, AttachmentTable
+from mephisto.library.util.orm.table import RecordTable
 from mephisto.library.util.storage import fetch_file
-from mephisto.shared import (
-    GenericSuccessResponse,
-    MEPHISTO_REPO,
-    GenericErrorResponse,
-    DATA_ROOT,
-)
+from mephisto.shared import MEPHISTO_REPO, GenericErrorResponse, GenericSuccessResponse
 
 
 @listen(MessageReceived)
@@ -50,8 +44,8 @@ async def ignore_self_message(ctx: Context):
 @priority(-1)
 async def record_received(avilla: Avilla, ctx: Context, message: Message):
     registry = avilla.launch_manager.get_component(DataService).registry
-    main_engine = await registry.create("main")
     engine = await registry.create(message.scene)
+    await save_resources(ctx, message.content)
     resources = extract_resources(message.content)
     content = serialize(message.content)
     await engine.insert_or_update(
@@ -69,27 +63,13 @@ async def record_received(avilla: Avilla, ctx: Context, message: Message):
         reply_to=message.reply.display if message.reply else None,
     )
 
-    for _, _, resource in resources:
-        if await main_engine.scalar_eager(
-            AttachmentTable, AttachmentTable.pattern == resource.to_selector().display
-        ):
-            continue
-        dumped = (await save_resources(ctx, resource))[0]
-        if isinstance(dumped, Path):
-            await main_engine.insert_or_update(
-                AttachmentTable,
-                AttachmentTable.pattern == resource.to_selector().display,
-                pattern=resource.to_selector().display,
-                file_path=dumped.relative_to(DATA_ROOT).as_posix(),
-            )
-
 
 @listen(MessageEdited)
 @priority(-1)
 async def record_edited(avilla: Avilla, ctx: Context, message: Message):
     registry = avilla.launch_manager.get_component(DataService).registry
-    main_engine = await registry.create("main")
     engine = await registry.create(message.scene)
+    await save_resources(ctx, message.content)
     resources = extract_resources(message.content)
     content = serialize(message.content)
     await engine.update(
@@ -108,20 +88,6 @@ async def record_edited(avilla: Avilla, ctx: Context, message: Message):
         edited=True,
         edit_time=message.time,
     )
-
-    for _, _, resource in resources:
-        if await main_engine.scalar_eager(
-            AttachmentTable, AttachmentTable.pattern == resource.to_selector().display
-        ):
-            continue
-        dumped = (await save_resources(ctx, resource))[0]
-        if isinstance(dumped, Path):
-            await main_engine.insert_or_update(
-                AttachmentTable,
-                AttachmentTable.pattern == resource.to_selector().display,
-                pattern=resource.to_selector().display,
-                file_path=dumped.relative_to(DATA_ROOT).as_posix(),
-            )
 
 
 @listen(MessageRevoked)

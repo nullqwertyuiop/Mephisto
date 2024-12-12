@@ -1,3 +1,4 @@
+import os
 import pkgutil
 from json import JSONDecodeError
 from pathlib import Path
@@ -6,6 +7,7 @@ from typing import TypeVar
 import toml
 from creart import it
 from graia.saya import Saya
+from kayaku import create
 from launart import Launart, Service
 from launart.status import Phase
 from loguru import logger
@@ -13,8 +15,11 @@ from pdm.core import Core as PDMCore
 from pdm.models.requirements import FileRequirement
 from pydantic import ValidationError
 
+from mephisto.library.model.config import MephistoConfig
 from mephisto.library.model.exception import RequirementResolveFailed
 from mephisto.library.model.metadata import ModuleMetadata
+from mephisto.library.service.standard import StandardService
+from mephisto.library.util.context import module_instance
 from mephisto.shared import MEPHISTO_ROOT
 
 _T = TypeVar("_T")
@@ -205,24 +210,43 @@ class ModuleService(Service):
         saya = it(Saya)
         with saya.module_context():
             for module in modules:
+                token = module_instance.set(module)
                 try:
+                    if set(m.identifier for m in module.dependencies) & {
+                        m.identifier for m in retry_modules
+                    }:
+                        logger.warning(
+                            f"[ModuleService] Skipping {module.identifier} due to retry"
+                        )
+                        retry_modules.append(module)
+                        continue
                     saya.require(module.entrypoint)
-                except ImportError:
+                except ImportError as e:
+                    logger.error(
+                        f"[ModuleService] Failed to import {module.identifier}: {e}"
+                    )
                     self.handle_dependency(module)
                     pdm_install = True
                     if retry:
+                        logger.warning(
+                            f"[ModuleService] Retrying to require {module.identifier}"
+                        )
                         retry_modules.append(module)
                 except Exception as e:
+                    logger.exception(e)
                     logger.error(
                         f"[ModuleService] Failed to require {module.identifier}: {e}"
                     )
                     if retry:
                         retry_modules.append(module)
+                finally:
+                    module_instance.reset(token)
         if pdm_install:
-            self.pdm_core.main(["lock", "--group", ":all"])
-            self.pdm_core.main(["install", "--group", ":all"])
+            cfg: MephistoConfig = create(MephistoConfig)
+            os.system(f"{cfg.advanced.pdm_path} lock --group :all")
+            os.system(f"{cfg.advanced.pdm_path} install --group :all")
         if retry_modules:
-            self.require_modules(*retry_modules, retry=False)
+            self.require_modules(*self.resolve(*retry_modules), retry=False)
         self.modules |= set(modules)
 
     def require_path(self, *paths: Path, retry: bool = True):
@@ -231,6 +255,9 @@ class ModuleService(Service):
         self.require_modules(*resolved, retry=retry)
 
     async def launch(self, manager: Launart):
+        await manager.get_component(StandardService).status.wait_for(
+            "waiting-for-prepare"
+        )
         self.require_path(Path("library") / "module", Path("module"))
 
         async with self.stage("preparing"):

@@ -1,6 +1,5 @@
 import asyncio
 import contextlib
-from http import HTTPStatus
 import os
 import random
 import signal
@@ -10,6 +9,7 @@ import subprocess
 import sys
 import time
 from contextvars import ContextVar
+from http import HTTPStatus
 from typing import cast
 
 from creart import it

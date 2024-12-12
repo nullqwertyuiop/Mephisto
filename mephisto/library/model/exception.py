@@ -25,3 +25,7 @@ class MessageDeserializationFailed(Exception):
             raw=raw,
         )
         super().__init__(self.text)
+
+
+class PermissionEntryNotFound(Exception):
+    pass

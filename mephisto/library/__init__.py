@@ -1,6 +1,6 @@
-import contextlib
 import kayaku
 from creart import it
+from graiax.playwright import PlaywrightService
 from launart import Launart
 
 
@@ -11,7 +11,6 @@ def launch():
     from mephisto.library.service import (
         DataService,
         MephistoService,
-        MessageCacheService,
         ModuleService,
         ProtocolService,
         SessionService,
@@ -22,7 +21,6 @@ def launch():
     kayaku.create(MephistoConfig)
 
     mgr = it(Launart)
-    mgr.add_component(MessageCacheService())
     mgr.add_component(DataService())
     mgr.add_component(ModuleService())
     mgr.add_component(ProtocolService())
@@ -30,11 +28,6 @@ def launch():
     mgr.add_component(StandardService())
     mgr.add_component(MephistoService())
     mgr.add_component(UvicornService())
-
-    # Optional components
-    with contextlib.suppress(ImportError):
-        from graiax.playwright import PlaywrightService
-
-        mgr.add_component(PlaywrightService())
+    mgr.add_component(PlaywrightService())
 
     mgr.launch_blocking()

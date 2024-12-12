@@ -1,0 +1,1 @@
+Add `ModuleMetadata.current()` contextual information for modules to quickly access metadata about the current module.

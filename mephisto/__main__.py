@@ -4,7 +4,7 @@ from pathlib import Path
 import toml
 from loguru import logger
 
-from mephisto.shared import MEPHISTO_ROOT, PROJECT_ROOT, LOG_ROOT, setup_logger
+from mephisto.shared import LOG_ROOT, MEPHISTO_ROOT, PROJECT_ROOT, setup_logger
 
 
 def _init():

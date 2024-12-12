@@ -3,7 +3,7 @@ name = "Mephisto"
 version = "0.1.2"
 description = ""
 authors = [
-    {name = "nullqwertyuiop", email = "null@member.fsf.org"},
+    { name = "nullqwertyuiop", email = "null@member.fsf.org" },
 ]
 dependencies = [
     "avilla-workspace @ git+https://github.com/nullqwertyuiop/Avilla.git@canary/edge",
@@ -24,16 +24,17 @@ dependencies = [
     "elaina-flywheel>=0.6.0",
     "filetype>=1.2.0",
     "pdm>=2.19.1",
+    "Pillow>=11.0.0",
+    "mkdocs>=1.6.1",
+    "graiax-text2img-playwright>=0.5.0",
+    "lxml>=5.1.0",
+    "httpx>=0.28.0",
 ]
 requires-python = "<3.14,>=3.12"
 readme = "README.md"
-license = {text = "MIT License"}
+license = { text = "MIT License" }
 
 [project.optional-dependencies]
-playwright = [
-    "graiax-text2img-playwright>=0.5.0",
-    "lxml>=5.1.0",
-]
 mysql = [
     "aiomysql>=0.2.0",
 ]
@@ -51,7 +52,7 @@ directory = "changelog.d"
 filename = "CHANGELOG.md"
 start_string = "<!-- towncrier release notes start -->\n"
 underlines = ["", "", ""]
-template = "changelog.d/changelog_template.ninja"
+template = "changelog.d/changelog_template.jinja"
 title_format = "## [{version}](https://github.com/nullqwertyuiop/Mephisto/tree/{version}) - {project_date}"
 issue_format = "[#{issue}](https://github.com/nullqwertyuiop/Mephisto/issues/{issue})"
 

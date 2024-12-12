@@ -1,7 +1,7 @@
 import asyncio
 from asyncio import Semaphore
 from pathlib import Path
-from typing import Coroutine, Callable, Any, Final
+from typing import Any, Callable, Coroutine, Final
 
 from avilla.core import Selector
 from loguru import logger

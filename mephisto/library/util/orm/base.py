@@ -1,10 +1,10 @@
 from asyncio import Semaphore
 from contextlib import asynccontextmanager
-from typing import TypeVar, AsyncGenerator
+from typing import AsyncGenerator, TypeVar
 
 from loguru import logger
-from sqlalchemy import Executable, Result, update, insert, select, delete, inspect
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncEngine, AsyncSession
+from sqlalchemy import Executable, Result, delete, insert, inspect, select, update
+from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, create_async_engine
 from sqlalchemy.orm import declarative_base
 
 Base = declarative_base()

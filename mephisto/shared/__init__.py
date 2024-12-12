@@ -1,4 +1,4 @@
-from .const import MEPHISTO_ROOT, PROJECT_ROOT, CONFIG_ROOT, DATA_ROOT, LOG_ROOT
+from .const import CONFIG_ROOT, DATA_ROOT, LOG_ROOT, MEPHISTO_ROOT, PROJECT_ROOT
 from .git import MEPHISTO_REPO
 from .model import GenericErrorResponse, GenericResponse, GenericSuccessResponse
 from .util import setup_logger

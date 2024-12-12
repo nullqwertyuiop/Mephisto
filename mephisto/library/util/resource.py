@@ -1,17 +1,13 @@
 from typing import Callable, cast
 
-from avilla.core import Context, RawResource, Resource, Picture, Video, Notice
+from avilla.core import Context, Notice, Picture, RawResource, Resource, Text, Video
 from avilla.standard.core.profile import Nick
-from avilla.standard.telegram.elements import (
-    Picture as TelegramPicture,
-    Video as TelegramVideo,
-    Animation as TelegramAnimation,
-    Sticker as TelegramSticker,
-)
-from avilla.telegram.resource import TelegramStickerResource, TelegramAnimationResource
-from graia.amnesia.message import Element, MessageChain, Text
-
-from mephisto.library.standard.element.qq import MarketFace
+from avilla.standard.telegram.elements import Animation as TelegramAnimation
+from avilla.standard.telegram.elements import Picture as TelegramPicture
+from avilla.standard.telegram.elements import Sticker as TelegramSticker
+from avilla.standard.telegram.elements import Video as TelegramVideo
+from avilla.telegram.resource import TelegramAnimationResource, TelegramStickerResource
+from graia.amnesia.message import Element, MessageChain
 
 
 class ResourcedElement(Element):
@@ -39,7 +35,6 @@ PARSER_MAP: dict[type, Callable[[ResourcedElement], Element]] = {
     TelegramVideo: lambda _: Video(_.resource),
     TelegramAnimation: parse_telegram_animation,
     TelegramSticker: parse_telegram_sticker,
-    MarketFace: lambda _: Picture(_.resource),
 }
 
 

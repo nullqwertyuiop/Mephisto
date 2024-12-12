@@ -22,6 +22,11 @@ class RebuiltMessage:
     content: MessageChain
     reply_to: Selector | None
 
+    deleted: bool
+    delete_time: datetime | None
+    edited: bool
+    edit_time: datetime | None
+
     @classmethod
     async def from_selector(cls, selector: Selector, scene: Selector) -> Self:
         registry = it(Launart).get_component(DataService).registry
@@ -43,4 +48,8 @@ class RebuiltMessage:
                     if result.reply_to  # type: ignore
                     else None
                 ),
+                deleted=result.deleted,  # type: ignore
+                delete_time=result.delete_time,  # type: ignore
+                edited=result.edited,  # type: ignore
+                edit_time=result.edit_time,  # type: ignore
             )
