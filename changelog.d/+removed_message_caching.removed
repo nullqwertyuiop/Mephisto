@@ -1,1 +1,0 @@
-Removed message caching for the time being. This feature is redundant and re-implemented by the new message system.

@@ -1,1 +1,0 @@
-Add basic permission system that allows for the creation of roles and the assignment of permissions to those roles. Permissions are then checked against the user's roles to determine if they have access to a given resource.
