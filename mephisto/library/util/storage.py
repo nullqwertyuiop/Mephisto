@@ -15,7 +15,7 @@ from launart import Launart
 from loguru import logger
 from yarl import URL
 
-from library.service import SessionService
+from mephisto.library.service import SessionService
 from mephisto.library.model.config import MephistoConfig
 from mephisto.library.util.const import (
     FILES_STORAGE_ROOT,
